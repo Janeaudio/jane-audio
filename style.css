@@ -1,0 +1,73 @@
+/* ------- Grundlayout ------- */
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f7f7f7;
+  color: #222;
+}
+
+header {
+  background: white;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+}
+
+nav a {
+  margin-left: 20px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+nav a:hover {
+  color: #0077ff;
+}
+
+.container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+/* ------- Karten / Boxen ------- */
+
+.card {
+  background: white;
+  padding: 25px;
+  margin: 20px 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+/* ------- Buttons ------- */
+
+.button {
+  display: inline-block;
+  background: #0077ff;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.button:hover {
+  background: #005fd1;
+}
+
+/* ------- Responsive ------- */
+
+@media(max-width: 700px) {
+  nav a { margin-left: 10px; }
+  h1 { font-size: 1.6rem; }
+}

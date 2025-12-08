@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>JANE AUDIO</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+body {
+  font-family: 'VT323', monospace;
+  text-transform: uppercase;
+  margin:0;
+  background:#ffe7fb;
+  color:#ff4fa8;
+}
+#scope {
+  position: fixed;
+  top:0; left:0;
+  width:100vw; height:100vh;
+  z-index:0;
+  opacity:0.35;
+}
+header {
+  position: relative;
+  z-index:2;
+  background:#fff0fc;
+  padding:14px;
+  display:flex;
+  gap:20px;
+  font-size:22px;
+  border-bottom:3px solid #ff4fa8;
+}
+header a {
+  color:#ff4fa8;
+  text-decoration:none;
+  cursor:pointer;
+}
+header a:hover {text-decoration:underline;}
+.page { display:none; padding:40px; position:relative; z-index:2; }
+.page.active { display:block; }
+h1 { font-size:48px; letter-spacing:4px; }
+.button { 
+  background:#fff; border:3px solid #ff4fa8; 
+  padding:10px 20px; cursor:pointer; 
+  color:#ff4fa8; font-size:20px; 
+  margin-bottom:20px; display:inline-block; 
+  box-shadow:0 4px #cf1570; 
+}
+.button:active { transform:translateY(4px); box-shadow:0 0 #cf1570; }
+.keyboard { margin-top:40px; display:flex; }
+.key { width:50px; height:140px; background:white; border:2px solid #ff4fa8; margin-right:4px; display:flex; justify-content:center; align-items:flex-end; cursor:pointer; box-shadow:0 4px #cf1570; }
+.key:active { transform:translateY(4px); box-shadow:0 0 #cf1570; }
+
+/* --- Retro Eckige Knobs --- */
+.knobs { display:flex; gap:30px; margin-top:30px; }
+.knob {
+  width:50px;
+  height:50px;
+  border:4px solid #ff4fa8;
+  background:#ffe1f3;
+  box-shadow: inset -2px -2px 0 #ffbee5, inset 2px 2px 0 #b40f6c, 0 3px 0 #a1085d;
+  cursor:pointer;
+  position:relative;
+  border-radius:0; /* eckig */
+}
+.knob:before {
+  content:"";
+  position:absolute;
+  width:4px;
+  height:16px;
+  background:white;
+  top:6px; left:50%;
+  transform:translateX(-50%);
+  border-radius:1px;
+}
+.knob-label { text-align:center; margin-top:5px; font-size:12px; }
+</style>
+</head>
+<body>
+
+<canvas id="scope"></canvas>
+
+<header>
+  <a data-page="home">HOME</a>
+  <a data-page="referenzen">REFERENZEN</a>
+  <a data-page="shop">SHOP</a>
+  <a data-page="kontakt">KONTAKT</a>
+  <a data-page="impressum">IMPRESSUM</a>
+</header>
+
+<div id="home" class="page active">
+<h1>JANE AUDIO</h1>
+<button id="start" class="button">AUDIO STARTEN</button>
+
+<div class="keyboard">
+<div class="key" data-freq="261.63">C</div>
+<div class="key" data-freq="293.66">D</div>
+<div class="key" data-freq="329.63">E</div>
+<div class="key" data-freq="349.23">F</div>
+<div class="key" data-freq="392.00">G</div>
+<div class="key" data-freq="440.00">A</div>
+<div class="key" data-freq="493.88">B</div>
+<div class="key" data-freq="523.25">C</div>
+</div>
+
+<div class="knobs">
+<div><div class="knob" id="detune"></div><div class="knob-label">DETUNE</div></div>
+<div><div class="knob" id="filter"></div><div class="knob-label">FILTER</div></div>
+<div><div class="knob" id="wave"></div><div class="knob-label">WAVE</div></div>
+<div><div class="knob" id="crush"></div><div class="knob-label">CRUSH</div></div>
+</div>
+</div>
+
+<div id="referenzen" class="page"><h1>REFERENZEN</h1></div>
+<div id="shop" class="page"><h1>SHOP</h1></div>
+<div id="kontakt" class="page"><h1>KONTAKT</h1></div>
+<div id="impressum" class="page"><h1>IMPRESSUM</h1></div>
+
+<script>
+/* NAVIGATION */
+document.querySelectorAll('header a').forEach(a=>{
+  a.addEventListener('click',()=>{
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(a.dataset.page).classList.add('active');
+  });
+});
+
+/* AUDIO */
+let audioCtx, osc, gainNode, filterNode, analyser, scriptNode;
+let bitDepth = 4;
+
+document.getElementById('start').addEventListener('click', ()=>{
+  if(audioCtx) return;
+
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  osc = audioCtx.createOscillator();
+  gainNode = audioCtx.createGain();
+  filterNode = audioCtx.createBiquadFilter();
+  analyser = audioCtx.createAnalyser();
+
+  osc.type='sawtooth';
+  osc.frequency.value=261.63;
+  gainNode.gain.value=0.2;
+  filterNode.type='lowpass';
+  filterNode.frequency.value=20000;
+
+  // BITCRUSHER
+  scriptNode = audioCtx.createScriptProcessor(4096,1,1);
+  let phase=0,last=0;
+  scriptNode.onaudioprocess = e=>{
+    const input=e.inputBuffer.getChannelData(0);
+    const output=e.outputBuffer.getChannelData(0);
+    for(let i=0;i<input.length;i++){
+      phase+=bitDepth/10;
+      if(phase>=1){ phase-=1; last=Math.round(input[i]*(1<<bitDepth))/(1<<bitDepth);}
+      output[i]=last;
+    }
+    for(let i=0;i<output.length;i++) output[i]*=0.25; // größere Amplitude, hörbarer
+  };
+
+  osc.connect(scriptNode);
+  scriptNode.connect(filterNode);
+  filterNode.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  gainNode.connect(analyser);
+
+  osc.start();
+  drawScope();
+});
+
+/* KEYBOARD */
+document.querySelectorAll('.key').forEach(k=>{
+  k.addEventListener('mousedown', ()=>{
+    if(!osc) return;
+    osc.frequency.setValueAtTime(parseFloat(k.dataset.freq), audioCtx.currentTime);
+  });
+});
+
+/* KNOBS */
+function makeKnob(id, callback){
+  const k=document.getElementById(id);
+  let angle=0;
+  k.addEventListener('mousedown', e=>{
+    const move=ev=>{
+      angle+=-ev.movementY*0.5;
+      if(angle>135) angle=135;
+      if(angle<-135) angle=-135;
+      k.style.transform=`rotate(${angle}deg)`;
+      callback((angle+135)/270);
+    };
+    const up=()=>{window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up);}
+    window.addEventListener('mousemove',move);
+    window.addEventListener('mouseup',up);
+  });
+}
+makeKnob('detune', v=>osc.detune.value=v*200-100);
+makeKnob('filter', v=>filterNode.frequency.value=200+v*12000);
+makeKnob('wave', v=>{ const types=['sine','triangle','sawtooth','square']; osc.type=types[Math.floor(v*4)]; });
+makeKnob('crush', v=>bitDepth=Math.floor(1+v*12));
+
+/* SCOPE mit animiertem Glitch & größerer Amplitude */
+const canvas=document.getElementById('scope');
+const ctx=canvas.getContext('2d');
+let glitchOffset = 0;
+
+function drawScope(){
+  if(!analyser) return;
+  requestAnimationFrame(drawScope);
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  glitchOffset += 0.2; // animiert
+  const data = new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(data);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.lineWidth = 2;
+
+  const colors = [
+    {c:'rgba(255,0,180,0.4)', offset: Math.sin(glitchOffset)*3},
+    {c:'rgba(255,100,200,0.25)', offset: Math.cos(glitchOffset)*3},
+    {c:'rgba(255,150,230,0.15)', offset: Math.sin(glitchOffset*0.7)*2}
+  ];
+
+  colors.forEach(col=>{
+    ctx.strokeStyle=col.c;
+    ctx.beginPath();
+    let slice = canvas.width/data.length;
+    let x = 0;
+    for(let i=0;i<data.length;i++){
+      const y = (data[i]/128-1)*(canvas.height*0.6)/2 + canvas.height/2 + col.offset; // größere Amplitude
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      x+=slice;
+    }
+    ctx.stroke();
+  });
+}
+</script>
+
+</body>
+</html>
