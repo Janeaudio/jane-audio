@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>JANE AUDIO</title>
+<title>JANE</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 body {
@@ -60,7 +60,7 @@ h1 { font-size:48px; letter-spacing:4px; }
   box-shadow: inset -2px -2px 0 #ffbee5, inset 2px 2px 0 #b40f6c, 0 3px 0 #a1085d;
   cursor:pointer;
   position:relative;
-  border-radius:0; /* eckig */
+  border-radius:0;
 }
 .knob:before {
   content:"";
@@ -88,8 +88,8 @@ h1 { font-size:48px; letter-spacing:4px; }
 </header>
 
 <div id="home" class="page active">
-<h1>JANE AUDIO</h1>
-<button id="start" class="button">AUDIO STARTEN</button>
+<h1>JANE</h1>
+<button id="start" class="button">AUDIO</button>
 
 <div class="keyboard">
 <div class="key" data-freq="261.63">C</div>
@@ -124,13 +124,13 @@ document.querySelectorAll('header a').forEach(a=>{
   });
 });
 
-/* AUDIO */
-let audioCtx, osc, gainNode, filterNode, analyser, scriptNode;
+/* AUDIO ENGINE */
+let audioCtx = null;
+let osc, gainNode, filterNode, analyser, scriptNode;
 let bitDepth = 4;
+let audioRunning = false;
 
-document.getElementById('start').addEventListener('click', ()=>{
-  if(audioCtx) return;
-
+function setupAudio(){
   audioCtx = new (window.AudioContext||window.webkitAudioContext)();
   osc = audioCtx.createOscillator();
   gainNode = audioCtx.createGain();
@@ -154,7 +154,7 @@ document.getElementById('start').addEventListener('click', ()=>{
       if(phase>=1){ phase-=1; last=Math.round(input[i]*(1<<bitDepth))/(1<<bitDepth);}
       output[i]=last;
     }
-    for(let i=0;i<output.length;i++) output[i]*=0.25; // größere Amplitude, hörbarer
+    for(let i=0;i<output.length;i++) output[i]*=0.25;
   };
 
   osc.connect(scriptNode);
@@ -164,7 +164,21 @@ document.getElementById('start').addEventListener('click', ()=>{
   gainNode.connect(analyser);
 
   osc.start();
-  drawScope();
+}
+
+/* TOGGLE AUDIO */
+document.getElementById('start').addEventListener('click', ()=>{
+  if(!audioRunning){
+    setupAudio();
+    audioRunning = true;
+    document.getElementById('start').style.background = "#ffbee5";
+    drawScope();
+  } else {
+    try { osc.stop(); } catch(e){}
+    audioCtx.close();
+    audioRunning = false;
+    document.getElementById('start').style.background = "#fff";
+  }
 });
 
 /* KEYBOARD */
@@ -192,24 +206,24 @@ function makeKnob(id, callback){
     window.addEventListener('mouseup',up);
   });
 }
-makeKnob('detune', v=>osc.detune.value=v*200-100);
-makeKnob('filter', v=>filterNode.frequency.value=200+v*12000);
-makeKnob('wave', v=>{ const types=['sine','triangle','sawtooth','square']; osc.type=types[Math.floor(v*4)]; });
+makeKnob('detune', v=>{ if(osc) osc.detune.value=v*200-100; });
+makeKnob('filter', v=>{ if(filterNode) filterNode.frequency.value=200+v*12000; });
+makeKnob('wave', v=>{ if(osc){ const types=['sine','triangle','sawtooth','square']; osc.type=types[Math.floor(v*4)]; }});
 makeKnob('crush', v=>bitDepth=Math.floor(1+v*12));
 
-/* SCOPE mit animiertem Glitch & größerer Amplitude */
+/* SCOPE + ANIMATED GLITCH */
 const canvas=document.getElementById('scope');
 const ctx=canvas.getContext('2d');
 let glitchOffset = 0;
 
 function drawScope(){
-  if(!analyser) return;
+  if(!analyser || !audioRunning) return;
   requestAnimationFrame(drawScope);
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  glitchOffset += 0.2; // animiert
+  glitchOffset += 0.2;
   const data = new Uint8Array(analyser.fftSize);
   analyser.getByteTimeDomainData(data);
 
@@ -228,7 +242,7 @@ function drawScope(){
     let slice = canvas.width/data.length;
     let x = 0;
     for(let i=0;i<data.length;i++){
-      const y = (data[i]/128-1)*(canvas.height*0.6)/2 + canvas.height/2 + col.offset; // größere Amplitude
+      const y = (data[i]/128-1)*(canvas.height*0.6)/2 + canvas.height/2 + col.offset;
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       x+=slice;
     }
