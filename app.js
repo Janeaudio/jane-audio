@@ -3,22 +3,19 @@ let osc, gain, filter, bitCrusherNode;
 let active = false;
 
 const audioBtn = document.getElementById("audio-btn");
-if (audioBtn) {
-    audioBtn.addEventListener("click", toggleAudio);
-}
+if (audioBtn) audioBtn.addEventListener("click", toggleAudio);
 
 function toggleAudio() {
     if (!audioCtx) audioCtx = new AudioContext();
 
     if (!active) {
         audioCtx.resume();
-        audioBtn.style.background = "#d10086";
-        audioBtn.style.color = "white";
         active = true;
+        audioBtn.style.background = "#d10086";
     } else {
         audioCtx.suspend();
-        audioBtn.style.background = "#ff99cc";
         active = false;
+        audioBtn.style.background = "#ff99cc";
     }
 }
 
@@ -37,7 +34,8 @@ function play(freq) {
     bitCrusherNode.onaudioprocess = function(e) {
         let input = e.inputBuffer.getChannelData(0);
         let output = e.outputBuffer.getChannelData(0);
-        for (let i=0; i<input.length; i++) {
+
+        for (let i = 0; i < input.length; i++) {
             output[i] = Math.round(input[i] * bitCrusherNode.norm) / bitCrusherNode.norm;
         }
     };
@@ -50,7 +48,7 @@ function play(freq) {
     bitCrusherNode.connect(gain);
     gain.connect(audioCtx.destination);
 
-    gain.gain.value = 0.2;
+    gain.gain.value = 0.25;
 
     osc.start();
 }
@@ -59,37 +57,52 @@ function stop() {
     if (osc) osc.stop();
 }
 
-document.querySelectorAll(".key").forEach(key=>{
-    key.addEventListener("mousedown", ()=>{
-        play(parseFloat(key.dataset.note));
-    });
+document.querySelectorAll(".key").forEach(key => {
+    key.addEventListener("mousedown", () => play(parseFloat(key.dataset.note)));
     key.addEventListener("mouseup", stop);
 });
 
-document.getElementById("wave")?.addEventListener("change", e=>{
-    if (osc) osc.type = e.target.value;
+/* KNOBS */
+
+const knobValues = {
+    detune: 0,
+    filter: 8000,
+    crush: 16
+};
+
+document.querySelectorAll(".knob").forEach(knob => {
+    let angle = 0;
+
+    knob.addEventListener("mousedown", e => {
+        const target = knob.dataset.target;
+
+        function move(ev) {
+            angle += ev.movementY * -0.5;
+            knob.style.transform = `rotate(${angle}deg)`;
+
+            let norm = (angle + 180) / 360;
+
+            if (target === "detune" && osc) osc.detune.value = norm * 100 - 50;
+            if (target === "filter" && filter) filter.frequency.value = 200 + norm * 20000;
+            if (target === "crush" && bitCrusherNode) {
+                let bits = Math.floor(1 + norm * 15);
+                bitCrusherNode.bits = bits;
+                bitCrusherNode.norm = Math.pow(2, bits - 1);
+            }
+        }
+
+        function up() {
+            window.removeEventListener("mousemove", move);
+            window.removeEventListener("mouseup", up);
+        }
+
+        window.addEventListener("mousemove", move);
+        window.addEventListener("mouseup", up);
+    });
 });
 
-document.getElementById("filter")?.addEventListener("input", e=>{
-    if (filter) filter.frequency.value = e.target.value;
-});
+/* SCOPES */
 
-document.getElementById("detune")?.addEventListener("input", e=>{
-    if (osc) osc.detune.value = e.target.value;
-});
-
-document.getElementById("crush")?.addEventListener("input", e=>{
-    if (bitCrusherNode) {
-        let bits = parseInt(e.target.value);
-        bitCrusherNode.bits = bits;
-        bitCrusherNode.norm = Math.pow(2, bits - 1);
-    }
-});
-
-
-// ---------------------------
-// SCOPES
-// ---------------------------
 const canvases = [
     document.getElementById("scope1"),
     document.getElementById("scope2"),
@@ -99,7 +112,7 @@ const canvases = [
 const colors = ["#ffcc00", "#ff3377", "#3399ff"];
 
 function resize() {
-    canvases.forEach(c=>{
+    canvases.forEach(c => {
         c.width = c.clientWidth;
         c.height = c.clientHeight;
     });
@@ -113,14 +126,15 @@ function initAnalyser() {
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 2048;
 
-    let dummyOsc = audioCtx.createOscillator();
-    let dummyGain = audioCtx.createGain();
-    dummyGain.gain.value = 0.0001;
-    dummyOsc.connect(dummyGain);
-    dummyGain.connect(analyser);
+    let osc0 = audioCtx.createOscillator();
+    let g0 = audioCtx.createGain();
+    g0.gain.value = 0.0001;
+
+    osc0.connect(g0);
+    g0.connect(analyser);
     analyser.connect(audioCtx.destination);
 
-    dummyOsc.start();
+    osc0.start();
 }
 
 initAnalyser();
@@ -131,20 +145,21 @@ function draw() {
     let buffer = new Uint8Array(analyser.frequencyBinCount);
     analyser.getByteTimeDomainData(buffer);
 
-    canvases.forEach((c,i)=>{
+    canvases.forEach((c, i) => {
         let ctx = c.getContext("2d");
-        ctx.clearRect(0,0,c.width,c.height);
+        ctx.clearRect(0, 0, c.width, c.height);
 
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 6;
         ctx.strokeStyle = colors[i];
 
         ctx.beginPath();
-        for (let x=0; x<c.width; x++){
+        for (let x = 0; x < c.width; x++) {
             let v = buffer[x] / 128.0;
-            let y = (v * c.height)/2;
-            if (x===0) ctx.moveTo(x,y);
-            else ctx.lineTo(x,y);
+            let y = (v * c.height) * 0.75; // ← AMPLITUDE VERGRÖSSERT
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
         }
+
         ctx.stroke();
     });
 }
