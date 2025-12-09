@@ -6,7 +6,7 @@ const audioBtn = document.getElementById("audio-btn");
 if (audioBtn) audioBtn.addEventListener("click", toggleAudio);
 
 function toggleAudio() {
-    if (!audioCtx) audioCtx = new AudioContext();
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     if (!active) {
         audioCtx.resume();
@@ -34,7 +34,6 @@ function play(freq) {
     bitCrusherNode.onaudioprocess = function(e) {
         let input = e.inputBuffer.getChannelData(0);
         let output = e.outputBuffer.getChannelData(0);
-
         for (let i = 0; i < input.length; i++) {
             output[i] = Math.round(input[i] * bitCrusherNode.norm) / bitCrusherNode.norm;
         }
@@ -62,47 +61,29 @@ document.querySelectorAll(".key").forEach(key => {
     key.addEventListener("mouseup", stop);
 });
 
-/* KNOBS */
-
-const knobValues = {
-    detune: 0,
-    filter: 8000,
-    crush: 16
-};
-
-document.querySelectorAll(".knob").forEach(knob => {
-    let angle = 0;
-
-    knob.addEventListener("mousedown", e => {
-        const target = knob.dataset.target;
-
-        function move(ev) {
-            angle += ev.movementY * -0.5;
-            knob.style.transform = `rotate(${angle}deg)`;
-
-            let norm = (angle + 180) / 360;
-
-            if (target === "detune" && osc) osc.detune.value = norm * 100 - 50;
-            if (target === "filter" && filter) filter.frequency.value = 200 + norm * 20000;
-            if (target === "crush" && bitCrusherNode) {
-                let bits = Math.floor(1 + norm * 15);
-                bitCrusherNode.bits = bits;
-                bitCrusherNode.norm = Math.pow(2, bits - 1);
-            }
-        }
-
-        function up() {
-            window.removeEventListener("mousemove", move);
-            window.removeEventListener("mouseup", up);
-        }
-
-        window.addEventListener("mousemove", move);
-        window.addEventListener("mouseup", up);
-    });
+document.getElementById("wave")?.addEventListener("change", e => {
+    if (osc) osc.type = e.target.value;
 });
 
-/* SCOPES */
+document.getElementById("filter")?.addEventListener("input", e => {
+    if (filter) filter.frequency.value = e.target.value;
+});
 
+document.getElementById("detune")?.addEventListener("input", e => {
+    if (osc) osc.detune.value = e.target.value;
+});
+
+document.getElementById("crush")?.addEventListener("input", e => {
+    if (bitCrusherNode) {
+        let bits = parseInt(e.target.value);
+        bitCrusherNode.bits = bits;
+        bitCrusherNode.norm = Math.pow(2, bits - 1);
+    }
+});
+
+// ---------------------------
+// SCOPES
+// ---------------------------
 const canvases = [
     document.getElementById("scope1"),
     document.getElementById("scope2"),
@@ -113,8 +94,9 @@ const colors = ["#ffcc00", "#ff3377", "#3399ff"];
 
 function resize() {
     canvases.forEach(c => {
-        c.width = c.clientWidth;
-        c.height = c.clientHeight;
+        c.width = c.clientWidth * window.devicePixelRatio;
+        c.height = c.clientHeight * window.devicePixelRatio;
+        c.getContext("2d").scale(window.devicePixelRatio, window.devicePixelRatio);
     });
 }
 window.addEventListener("resize", resize);
@@ -122,7 +104,7 @@ resize();
 
 let analyser;
 function initAnalyser() {
-    if (!audioCtx) audioCtx = new AudioContext();
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 2048;
 
@@ -142,24 +124,24 @@ initAnalyser();
 function draw() {
     requestAnimationFrame(draw);
 
-    let buffer = new Uint8Array(analyser.frequencyBinCount);
+    let buffer = new Uint8Array(analyser.fftSize);
     analyser.getByteTimeDomainData(buffer);
 
     canvases.forEach((c, i) => {
         let ctx = c.getContext("2d");
         ctx.clearRect(0, 0, c.width, c.height);
 
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 4;
         ctx.strokeStyle = colors[i];
 
         ctx.beginPath();
+        let step = buffer.length / c.width;
         for (let x = 0; x < c.width; x++) {
-            let v = buffer[x] / 128.0;
-            let y = (v * c.height) * 0.75; // ← AMPLITUDE VERGRÖSSERT
+            let v = buffer[Math.floor(x * step)] / 128.0;
+            let y = (v * c.height * 0.75);
             if (x === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
         }
-
         ctx.stroke();
     });
 }

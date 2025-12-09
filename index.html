@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Jane</title>
-    <link rel="stylesheet" href="style.css">
-    <script defer src="app.js"></script>
+<meta charset="UTF-8">
+<title>Jane</title>
+<link rel="stylesheet" href="style.css">
+<script defer src="app.js"></script>
 </head>
 <body>
 
@@ -25,6 +25,7 @@
 <div class="container">
 
     <h1 class="title">JANE</h1>
+
     <button id="audio-btn">AUDIO</button>
 
     <div id="synth">
@@ -45,15 +46,14 @@
         </div>
 
         <div class="controls">
-
             <div class="knob-wrap">
                 <label>DETUNE</label>
-                <div class="knob" data-target="detune"></div>
+                <input type="range" id="detune" min="-50" max="50" value="0" class="knob">
             </div>
 
             <div class="knob-wrap">
                 <label>FILTER</label>
-                <div class="knob" data-target="filter"></div>
+                <input type="range" id="filter" min="200" max="20000" value="8000" class="knob">
             </div>
 
             <div class="knob-wrap">
@@ -68,18 +68,15 @@
 
             <div class="knob-wrap">
                 <label>CRUSH</label>
-                <div class="knob" data-target="crush"></div>
+                <input type="range" id="crush" min="1" max="16" value="16" class="knob">
             </div>
-
         </div>
+
     </div>
 
     <div class="home-text">
         <h2>PLACEHOLDER HEADLINE</h2>
-        <p>
-            Dies ist ein Platzhaltertext, der später durch echte Inhalte ersetzt wird.
-            Hier kann eine kurze Beschreibung, Info oder ein Intro stehen.
-        </p>
+        <p>Dies ist ein Platzhaltertext unterhalb des Synths. Hier kann später eine Beschreibung oder Einführung stehen.</p>
     </div>
 
 </div>
