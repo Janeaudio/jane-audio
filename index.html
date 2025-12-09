@@ -12,13 +12,21 @@ body {
   background:#ffe7fb;
   color:#ff4fa8;
 }
-#scope {
+
+/* --- MULTI-SCOPE CANVASES --- */
+
+#scopePink, #scopeYellow, #scopeBlue {
   position: fixed;
   top:0; left:0;
   width:100vw; height:100vh;
   z-index:0;
   opacity:0.35;
+  pointer-events:none;
 }
+
+#scopeYellow { opacity:0.25; }
+#scopeBlue   { opacity:0.22; }
+
 header {
   position: relative;
   z-index:2;
@@ -77,7 +85,10 @@ h1 { font-size:48px; letter-spacing:4px; }
 </head>
 <body>
 
-<canvas id="scope"></canvas>
+<!-- MULTI-SCOPE LAYERS -->
+<canvas id="scopePink"></canvas>
+<canvas id="scopeYellow"></canvas>
+<canvas id="scopeBlue"></canvas>
 
 <header>
   <a data-page="home">HOME</a>
@@ -172,7 +183,7 @@ document.getElementById('start').addEventListener('click', ()=>{
     setupAudio();
     audioRunning = true;
     document.getElementById('start').style.background = "#ffbee5";
-    drawScope();
+    drawScopes();
   } else {
     try { osc.stop(); } catch(e){}
     audioCtx.close();
@@ -211,43 +222,78 @@ makeKnob('filter', v=>{ if(filterNode) filterNode.frequency.value=200+v*12000; }
 makeKnob('wave', v=>{ if(osc){ const types=['sine','triangle','sawtooth','square']; osc.type=types[Math.floor(v*4)]; }});
 makeKnob('crush', v=>bitDepth=Math.floor(1+v*12));
 
-/* SCOPE + ANIMATED GLITCH */
-const canvas=document.getElementById('scope');
-const ctx=canvas.getContext('2d');
+/* --- MULTI-SCOPE DRAWING --- */
+
+const canvasPink   = document.getElementById('scopePink');
+const canvasYellow = document.getElementById('scopeYellow');
+const canvasBlue   = document.getElementById('scopeBlue');
+
+const ctxPink   = canvasPink.getContext('2d');
+const ctxYellow = canvasYellow.getContext('2d');
+const ctxBlue   = canvasBlue.getContext('2d');
+
 let glitchOffset = 0;
 
-function drawScope(){
-  if(!analyser || !audioRunning) return;
-  requestAnimationFrame(drawScope);
+function drawSingleScope(ctx, color, amplitude, vertOffset){
+  if(!analyser) return;
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  glitchOffset += 0.2;
   const data = new Uint8Array(analyser.fftSize);
   analyser.getByteTimeDomainData(data);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvasPink.width, canvasPink.height);
+
   ctx.lineWidth = 2;
+  ctx.strokeStyle = color;
+  ctx.beginPath();
 
-  const colors = [
-    {c:'rgba(255,0,180,0.4)', offset: Math.sin(glitchOffset)*3},
-    {c:'rgba(255,100,200,0.25)', offset: Math.cos(glitchOffset)*3},
-    {c:'rgba(255,150,230,0.15)', offset: Math.sin(glitchOffset*0.7)*2}
-  ];
+  let slice = canvasPink.width / data.length;
+  let x = 0;
 
-  colors.forEach(col=>{
-    ctx.strokeStyle=col.c;
-    ctx.beginPath();
-    let slice = canvas.width/data.length;
-    let x = 0;
-    for(let i=0;i<data.length;i++){
-      const y = (data[i]/128-1)*(canvas.height*0.6)/2 + canvas.height/2 + col.offset;
-      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      x+=slice;
-    }
-    ctx.stroke();
-  });
+  for(let i=0;i<data.length;i++){
+    const y = (data[i]/128 - 1) * amplitude + canvasPink.height/2 + vertOffset;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    x += slice;
+  }
+
+  ctx.stroke();
+}
+
+function drawScopes(){
+  if(!audioRunning) return;
+  requestAnimationFrame(drawScopes);
+
+  canvasPink.width  = window.innerWidth;
+  canvasPink.height = window.innerHeight;
+  canvasYellow.width= canvasPink.width;
+  canvasYellow.height= canvasPink.height;
+  canvasBlue.width= canvasPink.width;
+  canvasBlue.height= canvasPink.height;
+
+  glitchOffset += 0.25;
+
+  /* MAIN SCOPE (pink) */
+  drawSingleScope(
+    ctxPink,
+    `rgba(255,0,180,0.45)`,
+    canvasPink.height * 0.32,
+    Math.sin(glitchOffset) * 3
+  );
+
+  /* YELLOW SCOPE — above */
+  drawSingleScope(
+    ctxYellow,
+    `rgba(255,255,120,0.35)`,
+    canvasPink.height * 0.28,
+    -canvasPink.height * 0.20 + Math.cos(glitchOffset*0.7)*4
+  );
+
+  /* BLUE SCOPE — below */
+  drawSingleScope(
+    ctxBlue,
+    `rgba(80,140,255,0.28)`,
+    canvasPink.height * 0.28,
+    canvasPink.height * 0.20 + Math.sin(glitchOffset*0.4)*4
+  );
 }
 </script>
 
