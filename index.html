@@ -11,6 +11,9 @@ body {
   margin:0;
   background:#ffe7fb;
   color:#ff4fa8;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 
 /* --- MULTI-SCOPE CANVASES --- */
@@ -25,15 +28,25 @@ body {
 #scopeYellow{ opacity:0.38; }
 #scopeBlue  { opacity:0.34; }
 
-header {
-  position: relative;
+/* LAYOUT CENTERING */
+#content-wrapper {
+  width:100%;
+  max-width:900px;
+  margin-top:20px;
   z-index:2;
+}
+
+/* NAVIGATION */
+header {
   background:#fff0fc;
   padding:14px;
   display:flex;
-  gap:20px;
+  justify-content:center;
+  gap:40px;
   font-size:22px;
   border-bottom:3px solid #ff4fa8;
+  position:relative;
+  z-index:2;
 }
 header a {
   color:#ff4fa8;
@@ -41,9 +54,19 @@ header a {
   cursor:pointer;
 }
 header a:hover {text-decoration:underline;}
-.page { display:none; padding:40px; position:relative; z-index:2; }
+
+.page { 
+  display:none; 
+  padding:40px; 
+  position:relative; 
+  z-index:2; 
+  text-align:center;
+}
 .page.active { display:block; }
+
+/* HEADERS */
 h1 { font-size:48px; letter-spacing:4px; }
+h2 { font-size:32px; margin-top:40px; }
 
 /* Button */
 .button { 
@@ -56,12 +79,31 @@ h1 { font-size:48px; letter-spacing:4px; }
 .button:active { transform:translateY(4px); box-shadow:0 0 #cf1570; }
 
 /* Keyboard */
-.keyboard { margin-top:40px; display:flex; }
-.key { width:50px; height:140px; background:white; border:2px solid #ff4fa8; margin-right:4px; display:flex; justify-content:center; align-items:flex-end; cursor:pointer; box-shadow:0 4px #cf1570; }
+.keyboard { 
+  margin-top:40px; 
+  display:flex; 
+  justify-content:center; 
+}
+.key { 
+  width:50px; height:140px; 
+  background:white; 
+  border:2px solid #ff4fa8; 
+  margin-right:4px; 
+  display:flex; 
+  justify-content:center; 
+  align-items:flex-end; 
+  cursor:pointer; 
+  box-shadow:0 4px #cf1570; 
+}
 .key:active { transform:translateY(4px); box-shadow:0 0 #cf1570; }
 
-/* --- NEW RETRO ROUND KNOBS --- */
-.knobs { display:flex; gap:40px; margin-top:30px; }
+/* --- RETRO ROUND KNOBS --- */
+.knobs { 
+  display:flex; 
+  gap:40px; 
+  margin-top:40px; 
+  justify-content:center;
+}
 
 .knob {
   width:40px;
@@ -100,6 +142,8 @@ h1 { font-size:48px; letter-spacing:4px; }
 <canvas id="scopeYellow"></canvas>
 <canvas id="scopeBlue"></canvas>
 
+<div id="content-wrapper">
+
 <header>
   <a data-page="home">HOME</a>
   <a data-page="referenzen">REFERENZEN</a>
@@ -110,6 +154,15 @@ h1 { font-size:48px; letter-spacing:4px; }
 
 <div id="home" class="page active">
 <h1>JANE</h1>
+
+<!-- PLACEHOLDER TEXT -->
+<h2>INTERACTIVE WEB SYNTHESIZER</h2>
+<p style="font-size:22px; max-width:700px; margin:0 auto; line-height:1.4;">
+DIESE EXPERIMENTELLE ONLINE-UMGEBUNG VERBINDET VISUELLE SCHWINGUNGEN 
+MIT ELEKTRONISCHEN KLÄNGEN. TESTE DIE STEUERUNGSELEMENTE, SPIELE 
+DIE TASTEN, UND ENTDECKE EINEN DIGITALEN KLANGKÖRPER IM RETRO-DESIGN.
+</p>
+
 <button id="start" class="button">AUDIO</button>
 
 <div class="keyboard">
@@ -136,12 +189,15 @@ h1 { font-size:48px; letter-spacing:4px; }
 <div id="kontakt" class="page"><h1>KONTAKT</h1></div>
 <div id="impressum" class="page"><h1>IMPRESSUM</h1></div>
 
+</div>
+
 <script>
 /* NAVIGATION */
 document.querySelectorAll('header a').forEach(a=>{
   a.addEventListener('click',()=>{
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById(a.dataset.page).classList.add('active');
+    window.scrollTo(0,0);
   });
 });
 
@@ -252,7 +308,7 @@ function drawSingleScope(ctx, color, amplitude, vertOffset){
 
   ctx.clearRect(0, 0, canvasPink.width, canvasPink.height);
 
-  ctx.lineWidth = 4;                 /* THICKER LINES */
+  ctx.lineWidth = 4;
   ctx.strokeStyle = color;
   ctx.beginPath();
 
@@ -276,34 +332,14 @@ function drawScopes(){
   canvasPink.height = window.innerHeight;
   canvasYellow.width= canvasPink.width;
   canvasYellow.height= canvasPink.height;
-  canvasBlue.width= canvasPink.width;
-  canvasBlue.height= canvasPink.height;
+  canvasBlue.width  = canvasPink.width;
+  canvasBlue.height = canvasPink.height;
 
   glitchOffset += 0.25;
 
-  /* MAIN SCOPE (pink) */
-  drawSingleScope(
-    ctxPink,
-    `rgba(255,0,200,0.85)`,   /* MORE SATURATION */
-    canvasPink.height * 0.35,
-    Math.sin(glitchOffset) * 3
-  );
-
-  /* YELLOW SCOPE */
-  drawSingleScope(
-    ctxYellow,
-    `rgba(255,255,0,0.75)`,
-    canvasPink.height * 0.30,
-    -canvasPink.height * 0.20 + Math.cos(glitchOffset*0.7)*4
-  );
-
-  /* BLUE SCOPE */
-  drawSingleScope(
-    ctxBlue,
-    `rgba(0,120,255,0.75)`,
-    canvasPink.height * 0.30,
-    canvasPink.height * 0.20 + Math.sin(glitchOffset*0.4)*4
-  );
+  drawSingleScope(ctxPink,   `rgba(255,0,200,0.85)`, canvasPink.height * 0.35, Math.sin(glitchOffset)*3);
+  drawSingleScope(ctxYellow, `rgba(255,255,0,0.75)`, canvasPink.height * 0.30, -canvasPink.height * 0.20 + Math.cos(glitchOffset*0.7)*4);
+  drawSingleScope(ctxBlue,   `rgba(0,120,255,0.75)`, canvasPink.height * 0.30,  canvasPink.height * 0.20 + Math.sin(glitchOffset*0.4)*4);
 }
 </script>
 
