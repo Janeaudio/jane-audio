@@ -9,23 +9,21 @@ body {
   font-family: 'VT323', monospace;
   text-transform: uppercase;
   margin:0;
-  background:#b2aeb1;
+  background:#ffe7fb;
   color:#ff4fa8;
 }
 
 /* --- MULTI-SCOPE CANVASES --- */
-
 #scopePink, #scopeYellow, #scopeBlue {
   position: fixed;
   top:0; left:0;
   width:100vw; height:100vh;
   z-index:0;
-  opacity:0.35;
   pointer-events:none;
 }
-
-#scopeYellow { opacity:0.25; }
-#scopeBlue   { opacity:0.22; }
+#scopePink  { opacity:0.45; }
+#scopeYellow{ opacity:0.38; }
+#scopeBlue  { opacity:0.34; }
 
 header {
   position: relative;
@@ -46,6 +44,8 @@ header a:hover {text-decoration:underline;}
 .page { display:none; padding:40px; position:relative; z-index:2; }
 .page.active { display:block; }
 h1 { font-size:48px; letter-spacing:4px; }
+
+/* Button */
 .button { 
   background:#fff; border:3px solid #ff4fa8; 
   padding:10px 20px; cursor:pointer; 
@@ -54,33 +54,43 @@ h1 { font-size:48px; letter-spacing:4px; }
   box-shadow:0 4px #cf1570; 
 }
 .button:active { transform:translateY(4px); box-shadow:0 0 #cf1570; }
+
+/* Keyboard */
 .keyboard { margin-top:40px; display:flex; }
 .key { width:50px; height:140px; background:white; border:2px solid #ff4fa8; margin-right:4px; display:flex; justify-content:center; align-items:flex-end; cursor:pointer; box-shadow:0 4px #cf1570; }
 .key:active { transform:translateY(4px); box-shadow:0 0 #cf1570; }
 
-/* --- Retro Eckige Knobs --- */
-.knobs { display:flex; gap:30px; margin-top:30px; }
+/* --- NEW RETRO ROUND KNOBS --- */
+.knobs { display:flex; gap:40px; margin-top:30px; }
+
 .knob {
-  width:50px;
-  height:50px;
-  border:4px solid #d4d4d4;
+  width:40px;
+  height:40px;
+  border-radius:50%;
   background:#ffe1f3;
-  box-shadow: inset -2px -2px 0 #ffbee5, inset 2px 2px 0 #b40f6c, 0 3px 0 #a1085d;
+  border:3px solid #ff4fa8;
+  box-shadow:inset -2px -2px 0 #ffbee5, inset 2px 2px 0 #b40f6c, 0 3px 0 #cf1570;
   cursor:pointer;
   position:relative;
-  border-radius:0;
 }
+
 .knob:before {
   content:"";
   position:absolute;
   width:4px;
-  height:16px;
+  height:12px;
   background:white;
-  top:6px; left:50%;
+  top:4px; left:50%;
   transform:translateX(-50%);
-  border-radius:1px;
+  border-radius:2px;
 }
-.knob-label { text-align:center; margin-top:5px; font-size:12px; }
+
+.knob-label { 
+  text-align:center; 
+  margin-top:5px; 
+  font-size:14px; 
+  color:#ff4fa8;
+}
 </style>
 </head>
 <body>
@@ -206,7 +216,7 @@ function makeKnob(id, callback){
   let angle=0;
   k.addEventListener('mousedown', e=>{
     const move=ev=>{
-      angle+=-ev.movementY*0.5;
+      angle+=-ev.movementY*0.7;
       if(angle>135) angle=135;
       if(angle<-135) angle=-135;
       k.style.transform=`rotate(${angle}deg)`;
@@ -242,7 +252,7 @@ function drawSingleScope(ctx, color, amplitude, vertOffset){
 
   ctx.clearRect(0, 0, canvasPink.width, canvasPink.height);
 
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 4;                 /* THICKER LINES */
   ctx.strokeStyle = color;
   ctx.beginPath();
 
@@ -274,24 +284,24 @@ function drawScopes(){
   /* MAIN SCOPE (pink) */
   drawSingleScope(
     ctxPink,
-    `rgba(255,0,180,0.45)`,
-    canvasPink.height * 0.32,
+    `rgba(255,0,200,0.85)`,   /* MORE SATURATION */
+    canvasPink.height * 0.35,
     Math.sin(glitchOffset) * 3
   );
 
-  /* YELLOW SCOPE — above */
+  /* YELLOW SCOPE */
   drawSingleScope(
     ctxYellow,
-    `rgba(255,255,120,0.35)`,
-    canvasPink.height * 0.28,
+    `rgba(255,255,0,0.75)`,
+    canvasPink.height * 0.30,
     -canvasPink.height * 0.20 + Math.cos(glitchOffset*0.7)*4
   );
 
-  /* BLUE SCOPE — below */
+  /* BLUE SCOPE */
   drawSingleScope(
     ctxBlue,
-    `rgba(80,140,255,0.28)`,
-    canvasPink.height * 0.28,
+    `rgba(0,120,255,0.75)`,
+    canvasPink.height * 0.30,
     canvasPink.height * 0.20 + Math.sin(glitchOffset*0.4)*4
   );
 }
