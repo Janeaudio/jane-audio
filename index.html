@@ -8,11 +8,10 @@
 </head>
 <body>
 
-<div id="scopes">
-    <canvas id="scope1"></canvas>
-    <canvas id="scope2"></canvas>
-    <canvas id="scope3"></canvas>
-</div>
+<!-- SCOPES -->
+<canvas id="scopePink"></canvas>
+<canvas id="scopeYellow"></canvas>
+<canvas id="scopeBlue"></canvas>
 
 <nav>
     <a href="index.html" class="active">Home</a>
@@ -26,49 +25,36 @@
 
     <h1 class="title">JANE</h1>
 
-    <button id="audio-btn">AUDIO</button>
+    <button id="audio-btn" class="button">AUDIO</button>
 
     <div id="synth">
 
         <div class="keyboard">
             <div data-note="261.63" class="key white"></div>
-            <div data-note="277.18" class="key black"></div>
             <div data-note="293.66" class="key white"></div>
-            <div data-note="311.13" class="key black"></div>
             <div data-note="329.63" class="key white"></div>
             <div data-note="349.23" class="key white"></div>
-            <div data-note="369.99" class="key black"></div>
             <div data-note="392.00" class="key white"></div>
-            <div data-note="415.30" class="key black"></div>
             <div data-note="440.00" class="key white"></div>
-            <div data-note="466.16" class="key black"></div>
             <div data-note="493.88" class="key white"></div>
         </div>
 
-        <div class="controls">
+        <div class="knobs">
             <div class="knob-wrap">
-                <label>DETUNE</label>
-                <input type="range" id="detune" min="-50" max="50" value="0" class="knob">
+                <div class="knob" id="detune"></div>
+                <span>DETUNE</span>
             </div>
-
             <div class="knob-wrap">
-                <label>FILTER</label>
-                <input type="range" id="filter" min="200" max="20000" value="8000" class="knob">
+                <div class="knob" id="filter"></div>
+                <span>FILTER</span>
             </div>
-
             <div class="knob-wrap">
-                <label>WAVE</label>
-                <select id="wave">
-                    <option value="sine">SINE</option>
-                    <option value="square">SQUARE</option>
-                    <option value="sawtooth">SAW</option>
-                    <option value="triangle">TRI</option>
-                </select>
+                <div class="knob" id="wave"></div>
+                <span>WAVE</span>
             </div>
-
             <div class="knob-wrap">
-                <label>CRUSH</label>
-                <input type="range" id="crush" min="1" max="16" value="16" class="knob">
+                <div class="knob" id="crush"></div>
+                <span>CRUSH</span>
             </div>
         </div>
 
@@ -80,6 +66,5 @@
     </div>
 
 </div>
-
 </body>
 </html>

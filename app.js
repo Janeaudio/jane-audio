@@ -1,149 +1,120 @@
-let audioCtx;
-let osc, gain, filter, bitCrusherNode;
-let active = false;
+// AUDIO
+let audioCtx, osc, gainNode, filterNode, analyser, scriptNode;
+let bitDepth = 4;
+let audioRunning = false;
 
-const audioBtn = document.getElementById("audio-btn");
-if (audioBtn) audioBtn.addEventListener("click", toggleAudio);
+const audioBtn = document.getElementById('audio-btn');
 
-function toggleAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    if (!active) {
-        audioCtx.resume();
-        active = true;
-        audioBtn.style.background = "#d10086";
-    } else {
-        audioCtx.suspend();
-        active = false;
-        audioBtn.style.background = "#ff99cc";
-    }
-}
-
-function play(freq) {
-    if (!audioCtx || audioCtx.state !== "running") return;
-
+function setupAudio() {
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
     osc = audioCtx.createOscillator();
-    gain = audioCtx.createGain();
-    filter = audioCtx.createBiquadFilter();
-    filter.type = "lowpass";
+    gainNode = audioCtx.createGain();
+    filterNode = audioCtx.createBiquadFilter();
+    analyser = audioCtx.createAnalyser();
 
-    bitCrusherNode = audioCtx.createScriptProcessor(256, 1, 1);
-    bitCrusherNode.bits = 16;
-    bitCrusherNode.norm = Math.pow(2, bitCrusherNode.bits - 1);
+    osc.type='sawtooth';
+    osc.frequency.value=261.63;
+    gainNode.gain.value=0.2;
+    filterNode.type='lowpass';
+    filterNode.frequency.value=20000;
 
-    bitCrusherNode.onaudioprocess = function(e) {
-        let input = e.inputBuffer.getChannelData(0);
-        let output = e.outputBuffer.getChannelData(0);
-        for (let i = 0; i < input.length; i++) {
-            output[i] = Math.round(input[i] * bitCrusherNode.norm) / bitCrusherNode.norm;
+    scriptNode = audioCtx.createScriptProcessor(4096,1,1);
+    let phase=0,last=0;
+    scriptNode.onaudioprocess = e=>{
+        const input=e.inputBuffer.getChannelData(0);
+        const output=e.outputBuffer.getChannelData(0);
+        for(let i=0;i<input.length;i++){
+            phase+=bitDepth/10;
+            if(phase>=1){ phase-=1; last=Math.round(input[i]*(1<<bitDepth))/(1<<bitDepth);}
+            output[i]=last*0.25;
         }
     };
 
-    osc.frequency.value = freq;
-    osc.type = document.getElementById("wave").value;
-
-    osc.connect(filter);
-    filter.connect(bitCrusherNode);
-    bitCrusherNode.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    gain.gain.value = 0.25;
+    osc.connect(scriptNode);
+    scriptNode.connect(filterNode);
+    filterNode.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    gainNode.connect(analyser);
 
     osc.start();
 }
 
-function stop() {
-    if (osc) osc.stop();
-}
-
-document.querySelectorAll(".key").forEach(key => {
-    key.addEventListener("mousedown", () => play(parseFloat(key.dataset.note)));
-    key.addEventListener("mouseup", stop);
-});
-
-document.getElementById("wave")?.addEventListener("change", e => {
-    if (osc) osc.type = e.target.value;
-});
-
-document.getElementById("filter")?.addEventListener("input", e => {
-    if (filter) filter.frequency.value = e.target.value;
-});
-
-document.getElementById("detune")?.addEventListener("input", e => {
-    if (osc) osc.detune.value = e.target.value;
-});
-
-document.getElementById("crush")?.addEventListener("input", e => {
-    if (bitCrusherNode) {
-        let bits = parseInt(e.target.value);
-        bitCrusherNode.bits = bits;
-        bitCrusherNode.norm = Math.pow(2, bits - 1);
+audioBtn.addEventListener('click', ()=>{
+    if(!audioRunning){
+        setupAudio();
+        audioRunning=true;
+        audioBtn.style.background="#ffbee5";
+        drawScopes();
+    } else {
+        try{osc.stop();}catch(e){}
+        audioCtx.close();
+        audioRunning=false;
+        audioBtn.style.background="#fff";
     }
 });
 
-// ---------------------------
+// KEYBOARD
+document.querySelectorAll('.key').forEach(k=>{
+    k.addEventListener('mousedown', ()=>{
+        if(!osc) return;
+        osc.frequency.setValueAtTime(parseFloat(k.dataset.note), audioCtx.currentTime);
+    });
+});
+
+// KNOBS
+function makeKnob(id, callback){
+    const k=document.getElementById(id);
+    let angle=0;
+    k.addEventListener('mousedown', e=>{
+        const move=ev=>{
+            angle+=-ev.movementY*0.7;
+            if(angle>135) angle=135;
+            if(angle<-135) angle=-135;
+            k.style.transform=`rotate(${angle}deg)`;
+            callback((angle+135)/270);
+        };
+        const up=()=>{window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up);}
+        window.addEventListener('mousemove',move);
+        window.addEventListener('mouseup',up);
+    });
+}
+makeKnob('detune', v=>{ if(osc) osc.detune.value=v*200-100; });
+makeKnob('filter', v=>{ if(filterNode) filterNode.frequency.value=200+v*12000; });
+makeKnob('wave', v=>{ if(osc){ const types=['sine','triangle','sawtooth','square']; osc.type=types[Math.floor(v*4)]; }});
+makeKnob('crush', v=>bitDepth=Math.floor(1+v*12));
+
 // SCOPES
-// ---------------------------
-const canvases = [
-    document.getElementById("scope1"),
-    document.getElementById("scope2"),
-    document.getElementById("scope3")
-];
+const canvasPink=document.getElementById('scopePink');
+const canvasYellow=document.getElementById('scopeYellow');
+const canvasBlue=document.getElementById('scopeBlue');
 
-const colors = ["#ffcc00", "#ff3377", "#3399ff"];
+const ctxPink=canvasPink.getContext('2d');
+const ctxYellow=canvasYellow.getContext('2d');
+const ctxBlue=canvasBlue.getContext('2d');
 
-function resize() {
-    canvases.forEach(c => {
-        c.width = c.clientWidth * window.devicePixelRatio;
-        c.height = c.clientHeight * window.devicePixelRatio;
-        c.getContext("2d").scale(window.devicePixelRatio, window.devicePixelRatio);
-    });
-}
-window.addEventListener("resize", resize);
-resize();
-
-let analyser;
-function initAnalyser() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 2048;
-
-    let osc0 = audioCtx.createOscillator();
-    let g0 = audioCtx.createGain();
-    g0.gain.value = 0.0001;
-
-    osc0.connect(g0);
-    g0.connect(analyser);
-    analyser.connect(audioCtx.destination);
-
-    osc0.start();
+function drawSingleScope(ctx,color,amplitude){
+    if(!analyser) return;
+    const data=new Uint8Array(analyser.fftSize);
+    analyser.getByteTimeDomainData(data);
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    ctx.lineWidth=4;
+    ctx.strokeStyle=color;
+    ctx.beginPath();
+    let slice=ctx.canvas.width/data.length;
+    let x=0;
+    for(let i=0;i<data.length;i++){
+        const y=(data[i]/128 -1)*amplitude + ctx.canvas.height/2;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        x+=slice;
+    }
+    ctx.stroke();
 }
 
-initAnalyser();
-
-function draw() {
-    requestAnimationFrame(draw);
-
-    let buffer = new Uint8Array(analyser.fftSize);
-    analyser.getByteTimeDomainData(buffer);
-
-    canvases.forEach((c, i) => {
-        let ctx = c.getContext("2d");
-        ctx.clearRect(0, 0, c.width, c.height);
-
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = colors[i];
-
-        ctx.beginPath();
-        let step = buffer.length / c.width;
-        for (let x = 0; x < c.width; x++) {
-            let v = buffer[Math.floor(x * step)] / 128.0;
-            let y = (v * c.height * 0.75);
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-    });
+function drawScopes(){
+    if(!audioRunning) return;
+    requestAnimationFrame(drawScopes);
+    [canvasPink,canvasYellow,canvasBlue].forEach(c=>{c.width=window.innerWidth;c.height=window.innerHeight;});
+    drawSingleScope(ctxPink,'rgba(255,0,200,0.8)',window.innerHeight*0.4);
+    drawSingleScope(ctxYellow,'rgba(255,255,0,0.6)',window.innerHeight*0.35);
+    drawSingleScope(ctxBlue,'rgba(0,120,255,0.6)',window.innerHeight*0.35);
 }
-
-draw();
