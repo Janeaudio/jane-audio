@@ -1,348 +1,80 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>JANE</title>
-<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-<style>
-body {
-  font-family: 'VT323', monospace;
-  text-transform: uppercase;
-  margin:0;
-  background:#ffe7fb;
-  color:#ff4fa8;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-/* --- MULTI-SCOPE CANVASES --- */
-#scopePink, #scopeYellow, #scopeBlue {
-  position: fixed;
-  top:0; left:0;
-  width:100vw; height:100vh;
-  z-index:0;
-  pointer-events:none;
-}
-#scopePink  { opacity:0.45; }
-#scopeYellow{ opacity:0.38; }
-#scopeBlue  { opacity:0.34; }
-
-/* LAYOUT CENTERING */
-#content-wrapper {
-  width:100%;
-  max-width:900px;
-  margin-top:20px;
-  z-index:2;
-}
-
-/* NAVIGATION */
-header {
-  background:#fff0fc;
-  padding:14px;
-  display:flex;
-  justify-content:center;
-  gap:40px;
-  font-size:22px;
-  border-bottom:3px solid #ff4fa8;
-  position:relative;
-  z-index:2;
-}
-header a {
-  color:#ff4fa8;
-  text-decoration:none;
-  cursor:pointer;
-}
-header a:hover {text-decoration:underline;}
-
-.page { 
-  display:none; 
-  padding:40px; 
-  position:relative; 
-  z-index:2; 
-  text-align:center;
-}
-.page.active { display:block; }
-
-/* HEADERS */
-h1 { font-size:48px; letter-spacing:4px; }
-h2 { font-size:32px; margin-top:40px; }
-
-/* Button */
-.button { 
-  background:#fff; border:3px solid #ff4fa8; 
-  padding:10px 20px; cursor:pointer; 
-  color:#ff4fa8; font-size:20px; 
-  margin-bottom:20px; display:inline-block; 
-  box-shadow:0 4px #cf1570; 
-}
-.button:active { transform:translateY(4px); box-shadow:0 0 #cf1570; }
-
-/* Keyboard */
-.keyboard { 
-  margin-top:40px; 
-  display:flex; 
-  justify-content:center; 
-}
-.key { 
-  width:50px; height:140px; 
-  background:white; 
-  border:2px solid #ff4fa8; 
-  margin-right:4px; 
-  display:flex; 
-  justify-content:center; 
-  align-items:flex-end; 
-  cursor:pointer; 
-  box-shadow:0 4px #cf1570; 
-}
-.key:active { transform:translateY(4px); box-shadow:0 0 #cf1570; }
-
-/* --- RETRO ROUND KNOBS --- */
-.knobs { 
-  display:flex; 
-  gap:40px; 
-  margin-top:40px; 
-  justify-content:center;
-}
-
-.knob {
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  background:#ffe1f3;
-  border:3px solid #ff4fa8;
-  box-shadow:inset -2px -2px 0 #ffbee5, inset 2px 2px 0 #b40f6c, 0 3px 0 #cf1570;
-  cursor:pointer;
-  position:relative;
-}
-
-.knob:before {
-  content:"";
-  position:absolute;
-  width:4px;
-  height:12px;
-  background:white;
-  top:4px; left:50%;
-  transform:translateX(-50%);
-  border-radius:2px;
-}
-
-.knob-label { 
-  text-align:center; 
-  margin-top:5px; 
-  font-size:14px; 
-  color:#ff4fa8;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Jane</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="app.js"></script>
 </head>
 <body>
 
-<!-- MULTI-SCOPE LAYERS -->
-<canvas id="scopePink"></canvas>
-<canvas id="scopeYellow"></canvas>
-<canvas id="scopeBlue"></canvas>
-
-<div id="content-wrapper">
-
-<header>
-  <a data-page="home">HOME</a>
-  <a data-page="referenzen">REFERENZEN</a>
-  <a data-page="shop">SHOP</a>
-  <a data-page="kontakt">KONTAKT</a>
-  <a data-page="impressum">IMPRESSUM</a>
-</header>
-
-<div id="home" class="page active">
-<h1>JANE</h1>
-
-<!-- PLACEHOLDER TEXT -->
-<h2>AUDIO ENGINEERING UND CODING</h2>
-<p style="font-size:22px; max-width:700px; margin:0 auto; line-height:1.4;">
-Seit 2014 arbeite ich am Klang der Zeit.
- Kreativität und Technik sind nicht teilbar, sie gehen Hand in Hand.
- Die Welt hat es verdient, so schön wie möglich zu klingen.
- Daran arbeite ich. 
-</p>
-
-<button id="start" class="button">AUDIO</button>
-
-<div class="keyboard">
-<div class="key" data-freq="261.63">C</div>
-<div class="key" data-freq="293.66">D</div>
-<div class="key" data-freq="329.63">E</div>
-<div class="key" data-freq="349.23">F</div>
-<div class="key" data-freq="392.00">G</div>
-<div class="key" data-freq="440.00">A</div>
-<div class="key" data-freq="493.88">B</div>
-<div class="key" data-freq="523.25">C</div>
+<div id="scopes">
+    <canvas id="scope1"></canvas>
+    <canvas id="scope2"></canvas>
+    <canvas id="scope3"></canvas>
 </div>
 
-<div class="knobs">
-<div><div class="knob" id="detune"></div><div class="knob-label">DETUNE</div></div>
-<div><div class="knob" id="filter"></div><div class="knob-label">FILTER</div></div>
-<div><div class="knob" id="wave"></div><div class="knob-label">WAVE</div></div>
-<div><div class="knob" id="crush"></div><div class="knob-label">CRUSH</div></div>
+<nav>
+    <a href="index.html">Home</a>
+    <a href="referenzen.html">Referenzen</a>
+    <a href="shop.html">Shop</a>
+    <a href="kontakt.html">Kontakt</a>
+    <a href="impressum.html">Impressum</a>
+</nav>
+
+<div class="container">
+
+    <h1 class="title">JANE</h1>
+
+    <button id="audio-btn">AUDIO</button>
+
+    <div id="synth">
+
+        <div class="keyboard">
+            <div data-note="261.63" class="key white"></div>
+            <div data-note="277.18" class="key black"></div>
+            <div data-note="293.66" class="key white"></div>
+            <div data-note="311.13" class="key black"></div>
+            <div data-note="329.63" class="key white"></div>
+            <div data-note="349.23" class="key white"></div>
+            <div data-note="369.99" class="key black"></div>
+            <div data-note="392.00" class="key white"></div>
+            <div data-note="415.30" class="key black"></div>
+            <div data-note="440.00" class="key white"></div>
+            <div data-note="466.16" class="key black"></div>
+            <div data-note="493.88" class="key white"></div>
+        </div>
+
+        <div class="controls">
+            <div class="knob-wrap">
+                <label>DETUNE</label>
+                <input type="range" id="detune" min="-50" max="50" value="0" class="knob">
+            </div>
+
+            <div class="knob-wrap">
+                <label>FILTER</label>
+                <input type="range" id="filter" min="200" max="20000" value="8000" class="knob">
+            </div>
+
+            <div class="knob-wrap">
+                <label>WAVE</label>
+                <select id="wave">
+                    <option value="sine">SINE</option>
+                    <option value="square">SQUARE</option>
+                    <option value="sawtooth">SAW</option>
+                    <option value="triangle">TRI</option>
+                </select>
+            </div>
+
+            <div class="knob-wrap">
+                <label>CRUSH</label>
+                <input type="range" id="crush" min="1" max="16" value="16" class="knob">
+            </div>
+        </div>
+
+    </div>
+
 </div>
-</div>
-
-<div id="referenzen" class="page"><h1>REFERENZEN</h1></div>
-<div id="shop" class="page"><h1>SHOP</h1></div>
-<div id="kontakt" class="page"><h1>KONTAKT</h1></div>
-<div id="impressum" class="page"><h1>IMPRESSUM</h1></div>
-
-</div>
-
-<script>
-/* NAVIGATION */
-document.querySelectorAll('header a').forEach(a=>{
-  a.addEventListener('click',()=>{
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById(a.dataset.page).classList.add('active');
-    window.scrollTo(0,0);
-  });
-});
-
-/* AUDIO ENGINE */
-let audioCtx = null;
-let osc, gainNode, filterNode, analyser, scriptNode;
-let bitDepth = 4;
-let audioRunning = false;
-
-function setupAudio(){
-  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  osc = audioCtx.createOscillator();
-  gainNode = audioCtx.createGain();
-  filterNode = audioCtx.createBiquadFilter();
-  analyser = audioCtx.createAnalyser();
-
-  osc.type='sawtooth';
-  osc.frequency.value=261.63;
-  gainNode.gain.value=0.2;
-  filterNode.type='lowpass';
-  filterNode.frequency.value=20000;
-
-  // BITCRUSHER
-  scriptNode = audioCtx.createScriptProcessor(4096,1,1);
-  let phase=0,last=0;
-  scriptNode.onaudioprocess = e=>{
-    const input=e.inputBuffer.getChannelData(0);
-    const output=e.outputBuffer.getChannelData(0);
-    for(let i=0;i<input.length;i++){
-      phase+=bitDepth/10;
-      if(phase>=1){ phase-=1; last=Math.round(input[i]*(1<<bitDepth))/(1<<bitDepth);}
-      output[i]=last;
-    }
-    for(let i=0;i<output.length;i++) output[i]*=0.25;
-  };
-
-  osc.connect(scriptNode);
-  scriptNode.connect(filterNode);
-  filterNode.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  gainNode.connect(analyser);
-
-  osc.start();
-}
-
-/* TOGGLE AUDIO */
-document.getElementById('start').addEventListener('click', ()=>{
-  if(!audioRunning){
-    setupAudio();
-    audioRunning = true;
-    document.getElementById('start').style.background = "#ffbee5";
-    drawScopes();
-  } else {
-    try { osc.stop(); } catch(e){}
-    audioCtx.close();
-    audioRunning = false;
-    document.getElementById('start').style.background = "#fff";
-  }
-});
-
-/* KEYBOARD */
-document.querySelectorAll('.key').forEach(k=>{
-  k.addEventListener('mousedown', ()=>{
-    if(!osc) return;
-    osc.frequency.setValueAtTime(parseFloat(k.dataset.freq), audioCtx.currentTime);
-  });
-});
-
-/* KNOBS */
-function makeKnob(id, callback){
-  const k=document.getElementById(id);
-  let angle=0;
-  k.addEventListener('mousedown', e=>{
-    const move=ev=>{
-      angle+=-ev.movementY*0.7;
-      if(angle>135) angle=135;
-      if(angle<-135) angle=-135;
-      k.style.transform=`rotate(${angle}deg)`;
-      callback((angle+135)/270);
-    };
-    const up=()=>{window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up);}
-    window.addEventListener('mousemove',move);
-    window.addEventListener('mouseup',up);
-  });
-}
-makeKnob('detune', v=>{ if(osc) osc.detune.value=v*200-100; });
-makeKnob('filter', v=>{ if(filterNode) filterNode.frequency.value=200+v*12000; });
-makeKnob('wave', v=>{ if(osc){ const types=['sine','triangle','sawtooth','square']; osc.type=types[Math.floor(v*4)]; }});
-makeKnob('crush', v=>bitDepth=Math.floor(1+v*12));
-
-/* --- MULTI-SCOPE DRAWING --- */
-
-const canvasPink   = document.getElementById('scopePink');
-const canvasYellow = document.getElementById('scopeYellow');
-const canvasBlue   = document.getElementById('scopeBlue');
-
-const ctxPink   = canvasPink.getContext('2d');
-const ctxYellow = canvasYellow.getContext('2d');
-const ctxBlue   = canvasBlue.getContext('2d');
-
-let glitchOffset = 0;
-
-function drawSingleScope(ctx, color, amplitude, vertOffset){
-  if(!analyser) return;
-
-  const data = new Uint8Array(analyser.fftSize);
-  analyser.getByteTimeDomainData(data);
-
-  ctx.clearRect(0, 0, canvasPink.width, canvasPink.height);
-
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = color;
-  ctx.beginPath();
-
-  let slice = canvasPink.width / data.length;
-  let x = 0;
-
-  for(let i=0;i<data.length;i++){
-    const y = (data[i]/128 - 1) * amplitude + canvasPink.height/2 + vertOffset;
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    x += slice;
-  }
-
-  ctx.stroke();
-}
-
-function drawScopes(){
-  if(!audioRunning) return;
-  requestAnimationFrame(drawScopes);
-
-  canvasPink.width  = window.innerWidth;
-  canvasPink.height = window.innerHeight;
-  canvasYellow.width= canvasPink.width;
-  canvasYellow.height= canvasPink.height;
-  canvasBlue.width  = canvasPink.width;
-  canvasBlue.height = canvasPink.height;
-
-  glitchOffset += 0.25;
-
-  drawSingleScope(ctxPink,   `rgba(255,0,200,0.85)`, canvasPink.height * 0.35, Math.sin(glitchOffset)*3);
-  drawSingleScope(ctxYellow, `rgba(255,255,0,0.75)`, canvasPink.height * 0.30, -canvasPink.height * 0.20 + Math.cos(glitchOffset*0.7)*4);
-  drawSingleScope(ctxBlue,   `rgba(0,120,255,0.75)`, canvasPink.height * 0.30,  canvasPink.height * 0.20 + Math.sin(glitchOffset*0.4)*4);
-}
-</script>
 
 </body>
 </html>

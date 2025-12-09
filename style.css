@@ -1,73 +1,110 @@
-/* ------- Grundlayout ------- */
-
 body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #f7f7f7;
-  color: #222;
+    margin: 0;
+    padding: 0;
+    background: #ffe6f9;
+    font-family: "OCR A", monospace;
+    color: #d10086;
+    text-align: center;
+    text-transform: uppercase;
 }
 
-header {
-  background: white;
-  padding: 15px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-  position: sticky;
-  top: 0;
+nav {
+    margin-top: 20px;
 }
 
 nav a {
-  margin-left: 20px;
-  color: #333;
-  text-decoration: none;
-  font-weight: 600;
+    margin: 0 20px;
+    text-decoration: none;
+    color: #d10086;
+    font-weight: bold;
 }
 
-nav a:hover {
-  color: #0077ff;
+nav a.active {
+    border-bottom: 2px solid #d10086;
 }
 
 .container {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 0 20px;
+    margin-top: 50px;
 }
 
-h1 {
-  font-size: 2rem;
+.title {
+    font-size: 64px;
+    letter-spacing: 8px;
 }
 
-/* ------- Karten / Boxen ------- */
-
-.card {
-  background: white;
-  padding: 25px;
-  margin: 20px 0;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+#audio-btn {
+    margin: 20px auto;
+    padding: 10px 30px;
+    background: #ff99cc;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
 }
 
-/* ------- Buttons ------- */
-
-.button {
-  display: inline-block;
-  background: #0077ff;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: bold;
+#synth {
+    margin-top: 30px;
 }
 
-.button:hover {
-  background: #005fd1;
+.keyboard { 
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
 }
 
-/* ------- Responsive ------- */
+.key {
+    width: 30px;
+    height: 150px;
+    margin: 1px;
+    border: 1px solid #d10086;
+    cursor: pointer;
+}
 
-@media(max-width: 700px) {
-  nav a { margin-left: 10px; }
-  h1 { font-size: 1.6rem; }
+.white { background: white; }
+.black {
+    background: #d10086;
+    height: 90px;
+    margin-top: 0;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+}
+
+.knob-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.knob {
+    -webkit-appearance: none;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #ffd6ef;
+}
+
+.page {
+    margin-top: 150px;
+}
+
+.page-title {
+    font-size: 48px;
+}
+
+#scopes {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    display: flex;
+}
+
+#scopes canvas {
+    width: 33.33%;
+    height: 100%;
 }
